@@ -6,6 +6,7 @@ import numpy as np
 import seaborn as sns
 from scipy import stats
 from kaggle.api.kaggle_api_extended import KaggleApi
+from tita_functions import plotFrequency,  plotScatterPlot
 
 
 # Plotly visualization
@@ -64,5 +65,51 @@ test_data = pd.read_csv("./test.csv")
 train_data = pd.read_csv("./train.csv")
 #%%
 train_data.head(5)
+test_data.head(5)
+
+
+"""For the sake of learning, most of the walkthough is skipped till feature engineering"""
 #%%
-sns.violinplot(x = train_data['Survived'], y = train_data['Fare'])
+# merge test and train data
+merged = pd.concat([train_data, test_data], sort = False).reset_index(drop=True)
+merged.head()
+
+#%%
+merged.Cabin.isna().sum()
+nanReplaced= merged.Cabin.fillna("X")
+merged["cabinProcessed"] = nanReplaced.str.get(0) 
+
+# %%
+firstName = merged.Name.str.split(".").str.get(0).str.split(",").str.get(-1)
+
+"""Create a bucket Officer and put Dr, Rev, Col, Major, Capt titles into it."""
+firstName.replace(to_replace = ["Dr", "Rev", "Col", "Major", "Capt"], value = "Officer", inplace = True,regex=True)
+
+"""Put Dona, Jonkheer, Countess, Sir, Lady, Don in bucket Aristocrat."""
+firstName.replace(to_replace = ["Dona", "Jonkheer", "Countess", "Sir", "Lady", "Don"], value = "Aristocrat", inplace = True,regex=True)
+
+"""Finally Replace Mlle and Ms with Miss. And Mme with Mrs."""
+firstName.replace({"Mlle":"Miss", "Ms":"Miss", "Mme":"Mrs"}, inplace = True,regex=True)
+
+"""Replace the Aristocrat with Aristocrat"""
+firstName.replace({"the Aristocrat":"Aristocrat"}, inplace = True,regex=True)
+
+"""Insert a column named 'nameProcessed'."""
+merged["nameProcessed"] = firstName
+plotFrequency(merged.nameProcessed)
+
+#%%
+
+merged["familySize"] = merged.SibSp + merged.Parch + 1
+plotFrequency(merged.familySize)
+
+#%%
+otherwise = merged.Ticket.str.split(" ").str.get(0).str.get(0) # This extracts the 1st character
+merged["ticketProcessed"] = np.where(merged.Ticket.str.isdigit(), "N", otherwise)
+plotFrequency(merged.ticketProcessed)
+
+#%%
+plotScatterPlot(calculateMissingValues(merged).index,
+               calculateMissingValues(merged),
+               "Features with Missing Values",
+               "Missing Values")
