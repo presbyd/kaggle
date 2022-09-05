@@ -6,8 +6,7 @@ import numpy as np
 import seaborn as sns
 from scipy import stats
 from kaggle.api.kaggle_api_extended import KaggleApi
-from tita_functions import plotFrequency,  plotScatterPlot
-
+import tita_functions as tf
 
 # Plotly visualization
 import plotly.graph_objs as go
@@ -109,7 +108,9 @@ merged["ticketProcessed"] = np.where(merged.Ticket.str.isdigit(), "N", otherwise
 plotFrequency(merged.ticketProcessed)
 
 #%%
-plotScatterPlot(calculateMissingValues(merged).index,
-               calculateMissingValues(merged),
+tf.plotScatterPlot(tf.calculateMissingValues(merged).index,
+               tf.calculateMissingValues(merged),
                "Features with Missing Values",
                "Missing Values")
+#%%
+tf.plotScatterPlot()
